@@ -9,12 +9,12 @@ import java.lang.annotation.Target;
 /**
  * 海加尔山数据源注解
  * <br>
- * 用来配合Bean说明多数据源的
+ * 用来配合Bean说明多数据源使用，还在完善中
  *
  * @author tc
  * @date 2019-03-21
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface HyjalDataSource {
@@ -24,7 +24,7 @@ public @interface HyjalDataSource {
      *
      * @return
      */
-    String name() default "";
+    String name() default "def";
 
     /**
      * 是否是默认的数据源

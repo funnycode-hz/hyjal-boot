@@ -18,6 +18,8 @@ import java.util.Map;
  */
 public class MultipleBeanDefinitionBuilder {
 
+    private static final Logger logger = LoggerFactory.getLogger(MultipleBeanDefinitionBuilder.class);
+
     private ApplicationContext context;
 
     private Map<Object, Object> targetDataSources;
@@ -52,8 +54,6 @@ public class MultipleBeanDefinitionBuilder {
 
         return this;
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(MultipleBeanDefinitionBuilder.class);
 
     BeanDefinition build() {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MultipleDataSource.class);

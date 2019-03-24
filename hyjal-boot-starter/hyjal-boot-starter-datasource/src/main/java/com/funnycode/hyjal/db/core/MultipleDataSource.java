@@ -1,5 +1,7 @@
 package com.funnycode.hyjal.db.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 /**
@@ -10,15 +12,13 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
  */
 public class MultipleDataSource extends AbstractRoutingDataSource {
 
-    private static final ThreadLocal<String> dataSourceKey = new InheritableThreadLocal<String>();
-
-    public static void setDataSourceKey(String dataSource) {
-        dataSourceKey.set(dataSource);
-    }
+    private static Logger logger = LoggerFactory.getLogger(MultipleDataSource.class);
 
     @Override
     protected Object determineCurrentLookupKey() {
-        return dataSourceKey.get();
+        String dataSourceRouterKey = MultipleDataSourceContextHolder.getDataSourceRouterKey();
+        logger.info("当前数据源是：{}", dataSourceRouterKey);
+        return MultipleDataSourceContextHolder.getDataSourceRouterKey();
     }
 
 }
