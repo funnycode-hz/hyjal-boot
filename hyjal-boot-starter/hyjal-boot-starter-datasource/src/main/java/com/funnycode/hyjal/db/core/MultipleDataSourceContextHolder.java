@@ -15,12 +15,12 @@ public class MultipleDataSourceContextHolder {
     private static Logger logger = LoggerFactory.getLogger(MultipleDataSourceContextHolder.class);
 
     /**
-     * 存储已经注册的数据源的key
+     * 存储已经注册的数据源的key,注意，默认数据源的key不用存储
      */
     public static List<String> dataSourceIds = new ArrayList<>();
 
     /**
-     * 线程级别的私有变量
+     * 当前持有的key
      */
     private static final ThreadLocal<String> HOLDER = new InheritableThreadLocal<String>();
 
@@ -29,7 +29,7 @@ public class MultipleDataSourceContextHolder {
     }
 
     public static void setDataSourceRouterKey(String dataSourceRouterKey) {
-        logger.info("切换至{}数据源", dataSourceRouterKey);
+        logger.info("切换至 {} 数据源 ", dataSourceRouterKey);
         HOLDER.set(dataSourceRouterKey);
     }
 

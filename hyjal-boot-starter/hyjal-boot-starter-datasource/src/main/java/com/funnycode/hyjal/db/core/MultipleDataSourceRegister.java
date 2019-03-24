@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.beanutils.BeanMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -16,11 +17,14 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyN
 import org.springframework.boot.context.properties.source.ConfigurationPropertyNameAliases;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
@@ -32,7 +36,8 @@ import java.util.Map;
  * @author tc
  * @date 2019-03-24
  */
-public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar, EnvironmentAware,
+    ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger(MultipleDataSourceRegister.class);
 
@@ -40,6 +45,8 @@ public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar
      * 配置上下文（也可以理解为配置文件的获取工具）
      */
     private Environment evn;
+
+    private ApplicationContext applicationContext;
 
     /**
      * 别名
@@ -69,6 +76,8 @@ public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar
         MultipleDataSourceProperties multipleDataSourceProperties = BinderUtils.bind((ConfigurableEnvironment)evn,
             "spring.hyjal.datasource",
             MultipleDataSourceProperties.class);
+
+        Assert.notNull(multipleDataSourceProperties.getDef(), "def datasource can not null");
 
         // 获取数据源类型
         String typeStr = multipleDataSourceProperties.getDef().getType();
@@ -104,18 +113,13 @@ public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar
             MultipleDataSourceContextHolder.dataSourceIds.add(key);
             logger.info("注册数据源{}成功", key);
         }
-        // bean定义类
-        GenericBeanDefinition define = new GenericBeanDefinition();
-        // 设置bean的类型，此处DynamicRoutingDataSource是继承AbstractRoutingDataSource的实现类
-        define.setBeanClass(MultipleDataSource.class);
-        // 需要注入的参数
-        MutablePropertyValues mpv = define.getPropertyValues();
-        // 添加默认数据源，避免key不存在的情况没有数据源可用
-        mpv.add("defaultTargetDataSource", defaultDatasource);
-        // 添加其他数据源
-        mpv.add("targetDataSources", customDataSources);
+
+        MultipleBeanDefinitionBuilder beanDefinitionBuilder = new MultipleBeanDefinitionBuilder(applicationContext)
+            .defaultTargetDataSource(defaultDatasource)
+            .targetDataSources(customDataSources);
+
         // 将该bean注册为datasource，不使用springboot自动生成的datasource
-        registry.registerBeanDefinition("datasource", define);
+        registry.registerBeanDefinition("datasource", beanDefinitionBuilder.build());
         logger.info("注册数据源成功，一共注册{}个数据源", customDataSources.keySet().size() + 1);
     }
 
@@ -161,4 +165,8 @@ public class MultipleDataSourceRegister implements ImportBeanDefinitionRegistrar
         }
     }
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 }

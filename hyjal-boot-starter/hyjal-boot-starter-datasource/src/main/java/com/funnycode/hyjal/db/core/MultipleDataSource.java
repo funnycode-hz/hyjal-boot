@@ -17,7 +17,7 @@ public class MultipleDataSource extends AbstractRoutingDataSource {
     @Override
     protected Object determineCurrentLookupKey() {
         String dataSourceRouterKey = MultipleDataSourceContextHolder.getDataSourceRouterKey();
-        logger.info("当前数据源是：{}", dataSourceRouterKey);
+        logger.info("当前数据源是：{} ", dataSourceRouterKey);
         return MultipleDataSourceContextHolder.getDataSourceRouterKey();
     }
 

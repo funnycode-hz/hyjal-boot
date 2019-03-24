@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -17,14 +18,18 @@ import java.io.IOException;
 public class MultipleDataSourceTest {
 
     @Autowired
+    private Environment environment;
+
+    @Autowired
     private TestDb1Mapper testDb1;
 
     @Autowired
     private TestDb2Mapper testDb2;
-    
+
     @Test
     public void test12() throws IOException {
-        System.out.println(testDb2.getName(1));
+        System.out.println(" testDb2 test : " + testDb2.getName(1));
+        System.out.println(" testDb1 test : " + testDb1.getName(11L));
         System.in.read();
     }
 

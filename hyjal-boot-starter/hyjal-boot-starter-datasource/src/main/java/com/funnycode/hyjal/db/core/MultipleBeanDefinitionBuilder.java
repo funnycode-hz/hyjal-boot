@@ -2,11 +2,15 @@ package com.funnycode.hyjal.db.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
 
+import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,45 +26,38 @@ public class MultipleBeanDefinitionBuilder {
 
     private ApplicationContext context;
 
-    private Map<Object, Object> targetDataSources;
+    private Map<String, DataSource> extendDataSources = new HashMap<>();
 
-    private String defaultTargetDataSource;
+    private DataSource defaultTargetDataSource;
 
     public MultipleBeanDefinitionBuilder(ApplicationContext context) {
         this.context = context;
     }
 
-    public synchronized MultipleBeanDefinitionBuilder defaultTargetDataSource(String defaultTargetDataSource) {
-        this.defaultTargetDataSource = this.defaultTargetDataSource == null ? defaultTargetDataSource
-            : this.defaultTargetDataSource;
+    public synchronized MultipleBeanDefinitionBuilder defaultTargetDataSource(DataSource defaultTargetDataSource) {
+        this.defaultTargetDataSource = defaultTargetDataSource;
         return this;
     }
 
-    public synchronized MultipleBeanDefinitionBuilder targetDataSources(String name, BeanDefinition beanDefinition) {
-        if (CollectionUtils.isEmpty(targetDataSources)) {
-            targetDataSources = new HashMap<>();
-        }
-
-        targetDataSources.putIfAbsent(name, beanDefinition);
+    public synchronized MultipleBeanDefinitionBuilder targetDataSources(String key, DataSource dataSource) {
+        extendDataSources.putIfAbsent(key, dataSource);
         return this;
     }
 
-    public synchronized MultipleBeanDefinitionBuilder targetDataSources(Map<Object, Object> targetDataSources) {
-        if (CollectionUtils.isEmpty(targetDataSources)) {
-            this.targetDataSources = targetDataSources;
-        } else {
-            this.targetDataSources.putAll(targetDataSources);
-        }
-
+    public synchronized MultipleBeanDefinitionBuilder targetDataSources(Map<String, DataSource> extendDataSources) {
+        this.extendDataSources.putAll(extendDataSources);
         return this;
     }
 
     BeanDefinition build() {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MultipleDataSource.class);
-        builder.addPropertyReference("defaultTargetDataSource", defaultTargetDataSource);
-        builder.addPropertyValue("targetDataSources", targetDataSources);
 
-        return builder.getBeanDefinition();
+        GenericBeanDefinition beanDefinition = (GenericBeanDefinition)builder.getBeanDefinition();
+        MutablePropertyValues mpv = new MutablePropertyValues();
+        mpv.add("defaultTargetDataSource", defaultTargetDataSource);
+        mpv.add("targetDataSources", extendDataSources);
+        beanDefinition.setPropertyValues(mpv);
+        return beanDefinition;
     }
 
 }
