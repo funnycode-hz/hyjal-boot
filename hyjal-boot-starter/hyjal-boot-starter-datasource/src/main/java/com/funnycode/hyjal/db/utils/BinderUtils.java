@@ -1,15 +1,13 @@
 package com.funnycode.hyjal.db.utils;
 
-//import org.springframework.boot.bind.PropertySourcesPropertyValues;
-//import org.springframework.boot.bind.RelaxedDataBinder;
-
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 /**
- * 兼容boot 1 2的工具类
+ * support both spring boot 1 and spring boot 2.
  *
  * @author tc
  * @date 2019-03-24
@@ -97,8 +95,26 @@ public final class BinderUtils {
         } catch (Throwable e) {
             throw new IllegalArgumentException(e);
         }
-        //new RelaxedDataBinder(instance, prefix)
-        //    .bind(new PropertySourcesPropertyValues(environment.getPropertySources()));
+
+        try {
+            Method bind = Class.forName("org.springframework.boot.bind.RelaxedDataBinder").getMethod("bind",
+                Class.forName(
+                    "org.springframework.boot.bind.PropertySourcesPropertyValues"));
+            bind.invoke(
+                Class.forName("org.springframework.boot.bind.RelaxedDataBinder")
+                    .getConstructor(
+                        instance.getClass(),
+                        prefix.getClass())
+                    .newInstance(instance, prefix),
+                Class.forName("org.springframework.boot.bind.PropertySourcesPropertyValues")
+                    .getConstructor(
+                        environment.getPropertySources().getClass())
+                    .newInstance(environment.getPropertySources())
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Binder 1.x error");
+        }
+
         return instance;
     }
 

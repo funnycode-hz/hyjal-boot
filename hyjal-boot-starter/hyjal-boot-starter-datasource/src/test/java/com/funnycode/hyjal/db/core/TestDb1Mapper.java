@@ -13,7 +13,6 @@ import java.util.Map;
  * @date 2019-03-24
  */
 @Mapper
-@HyjalDataSource(name = "local-db")
 public interface TestDb1Mapper {
 
     @Select("select app_name from malan_app WHERE app_id = #{id}")
